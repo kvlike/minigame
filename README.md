@@ -5,5 +5,6 @@ to-do list:
 - leave arena on disconnect from server
 - score system
 - damage system/kills
+- block break listener
 - final touches (mainly cosmetic stuff)
 - debugging
