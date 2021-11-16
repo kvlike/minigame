@@ -7,6 +7,7 @@ import me.kvlike.minigame.commands.AdminCommand;
 import me.kvlike.minigame.commands.PlayerCommand;
 import me.kvlike.minigame.database.MySQL;
 import me.kvlike.minigame.listeners.PlayerJoinListener;
+import me.kvlike.minigame.listeners.PlayerQuitListener;
 import me.kvlike.minigame.weapons.ShootingListener;
 import me.kvlike.minigame.weapons.WeaponsYaml;
 import org.bukkit.Bukkit;
@@ -103,6 +104,7 @@ public final class Minigame extends JavaPlugin {
         getCommand("mga").setExecutor(new AdminCommand());
 
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
         Bukkit.getPluginManager().registerEvents(new ShootingListener(), this);
 
     }
