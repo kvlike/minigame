@@ -1,6 +1,7 @@
 package me.kvlike.minigame.weapons;
 
 import me.kvlike.minigame.Minigame;
+import me.kvlike.minigame.events.ShotDamageEvent;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -49,13 +50,13 @@ public class ShootingListener implements Listener {
                                     Player target = (Player) entity;
                                     if(Minigame.playerArenaMap.get(target) != null)
                                     if (Minigame.playerArenaMap.get(e.getPlayer()) == Minigame.playerArenaMap.get(target) && getLookingAt(e.getPlayer(), target) && target.getNoDamageTicks() == 0) {
-                                        target.damage(damage, e.getPlayer());
-                                        e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                                        Bukkit.getPluginManager().callEvent(new ShotDamageEvent(e.getPlayer(), target, damage, "weapons." + weapon));
                                     }
                                 }
                             }
                         }
                     }
+                    break;
                 }
             }
         }

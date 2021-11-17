@@ -4,3 +4,5 @@ database:
   database: minigame_stats # name of your database. A database server can contain multiple databases
   user: root
   password: password
+
+playersPercentToStart: 0.75

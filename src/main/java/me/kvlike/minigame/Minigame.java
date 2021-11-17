@@ -1,6 +1,5 @@
 package me.kvlike.minigame;
 
-import me.kvlike.minigame.arenamanager.Arena;
 import me.kvlike.minigame.arenamanager.ArenaManager;
 import me.kvlike.minigame.arenamanager.ArenasYaml;
 import me.kvlike.minigame.commands.AdminCommand;
@@ -9,6 +8,7 @@ import me.kvlike.minigame.database.MySQL;
 import me.kvlike.minigame.listeners.PlayerJoinListener;
 import me.kvlike.minigame.listeners.PlayerQuitListener;
 import me.kvlike.minigame.weapons.ShootingListener;
+import me.kvlike.minigame.weapons.ShotDamageListener;
 import me.kvlike.minigame.weapons.WeaponsYaml;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -71,6 +71,9 @@ public final class Minigame extends JavaPlugin {
         WeaponsYaml.get().addDefault("weapons.sniper.scoreForKill", 20);
         WeaponsYaml.get().addDefault("weapons.sniper.soundPitch", -1);
 
+        WeaponsYaml.get().addDefault("scoreForWin", 10);
+        WeaponsYaml.get().addDefault("healthGainOnKill", 4);
+
         WeaponsYaml.get().options().copyDefaults(true);
         WeaponsYaml.save();
 
@@ -106,13 +109,15 @@ public final class Minigame extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
         Bukkit.getPluginManager().registerEvents(new ShootingListener(), this);
+        Bukkit.getPluginManager().registerEvents(new ShotDamageListener(), this);
 
     }
 
     @Override
     public void onDisable() {
 
-        MySQL.disconnect(); // disconnect from MySQL database
+        if(MySQL.isConnected())
+            MySQL.disconnect(); // disconnect from MySQL database
 
     }
 }

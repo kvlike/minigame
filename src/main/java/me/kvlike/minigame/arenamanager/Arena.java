@@ -1,30 +1,28 @@
 package me.kvlike.minigame.arenamanager;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import me.kvlike.minigame.Minigame;
+import me.kvlike.minigame.database.MySQL;
 import me.kvlike.minigame.weapons.WeaponsYaml;
 import org.bukkit.*;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 
 public class Arena {
 
-    private String name;
+    private final String name;
     private Location lobbyLocation = null;
     private final int maxPlayers;
     private GameState gameState = GameState.WAITING;
 
-    private List<Player> players = new ArrayList<>();
-    private Map<Player,Boolean> isSpectator = new HashMap<>();
+    private final List<Player> players = new ArrayList<>();
+    private final Map<Player,Boolean> isSpectator = new HashMap<>();
     private List<Location> spawnLocations = new ArrayList<>();
 
     private int time;
@@ -46,31 +44,13 @@ public class Arena {
         }, 0L, 20L);
     }
 
-    private void spawnFireworks(Location location, int amount) {
-        Location loc = location;
-        Firework fw = (Firework) loc.getWorld().spawnEntity(loc, EntityType.FIREWORK);
-        FireworkMeta fwm = fw.getFireworkMeta();
-
-        fwm.setPower(1);
-        fwm.addEffect(FireworkEffect.builder().withColor(Color.LIME).flicker(true).build());
-
-        fw.setFireworkMeta(fwm);
-        fw.detonate();
-
-        for(int i = 0;i<amount; i++){
-            Firework fw2 = (Firework) loc.getWorld().spawnEntity(loc, EntityType.FIREWORK);
-            fw2.setFireworkMeta(fwm);
-        }
-    }
-
     public Arena(String name, int maxPlayers) {
         this.name = name;
         this.maxPlayers = maxPlayers;
     }
 
     public void join(Player p) {
-        boolean ready = true;
-        if(Minigame.hub == null) ready = false;
+        boolean ready = Minigame.hub != null;
         if(spawnLocations.size() < maxPlayers) ready = false;
         for(Location l : spawnLocations){
             if (l == null) {
@@ -86,10 +66,20 @@ public class Arena {
                 Minigame.playerArenaMap.put(p, this.getName());
                 p.teleport(lobbyLocation);
                 p.getInventory().clear();
+                p.setHealth(20.0);
+                p.setGameMode(GameMode.ADVENTURE);
                 for(Player player : players){
                     player.sendMessage(ChatColor.RED + p.getDisplayName() + ChatColor.YELLOW + " has joined the game " + ChatColor.GRAY + "(" + players.size() + "/" + maxPlayers + ")");
                 }
-                if(players.size() >= maxPlayers - 4) setGameState(GameState.STARTING);
+                if(players.size() >= maxPlayers * plugin.getConfig().getInt("playersPercentToStart")) setGameState(GameState.STARTING);
+                PreparedStatement ps;
+                try {
+                    ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Last_game_score = 0 WHERE UUID = ?;");
+                    ps.setString(1, p.getUniqueId().toString());
+                    ps.executeUpdate();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
             else{
                 p.sendMessage(ChatColor.RED + "You can't join this arena now!");
@@ -101,6 +91,8 @@ public class Arena {
     }
 
     public void leave(Player p, Boolean message) {
+        p.setHealth(20.0);
+        p.setGameMode(GameMode.SURVIVAL);
         if(message) for(Player player : players){
             player.sendMessage(ChatColor.RED + p.getDisplayName() + ChatColor.YELLOW + " left the game");
         }
@@ -133,8 +125,21 @@ public class Arena {
         for(Player player : players){
             player.sendMessage(ChatColor.RED + p.getDisplayName() + ChatColor.GREEN + " won the game!");
         }
+        PreparedStatement ps;
+        try {
+            ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Total_score = Total_score + ? WHERE UUID = ?;");
+            ps.setInt(1, WeaponsYaml.get().getInt("scoreForWin"));
+            ps.setString(2, p.getUniqueId().toString());
+            ps.executeUpdate();
+
+            ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Last_game_score = Last_game_score + ? WHERE UUID = ?;");
+            ps.setInt(1, WeaponsYaml.get().getInt("scoreForWin"));
+            ps.setString(2, p.getUniqueId().toString());
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
         this.setGameState(GameState.WAITING);
-        spawnFireworks(p.getLocation(), 1);
     }
 
     public String getName() {
@@ -176,12 +181,24 @@ public class Arena {
     public void setSpectator(Player player, Boolean bool){
         isSpectator.put(player, bool);
         if(bool){
-            for(Player p : players)
-            player.hidePlayer(plugin, p);
+            for(Player p : players) player.hidePlayer(plugin, p);
+            player.setHealth(20.0);
+            player.setAllowFlight(true);
+            player.setFlying(true);
+            player.getInventory().clear();
+            if(this.getAlivePlayers() == 1){
+                for(Player p : players){
+                    if(!this.checkSpectator(p)){
+                        this.win(p);
+                        break;
+                    }
+                }
+            }
         }
         if(!bool){
-            for(Player p : players)
-                player.showPlayer(plugin, p);
+            for(Player p : players) player.showPlayer(plugin, p);
+            player.setFlying(false);
+            player.setAllowFlight(false);
         }
     }
 
@@ -208,6 +225,7 @@ public class Arena {
         if(this.gameState == GameState.PLAYING && gameState == GameState.STARTING) return;
         if(this.gameState == GameState.WAITING && gameState == GameState.PLAYING) return;
         if(this.gameState == GameState.STARTING && gameState == GameState.WAITING) return;
+        if(gameState == GameState.STARTING && players.size() > 1) return;
 
         this.gameState = gameState;
 

@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class PlayerJoinListener implements Listener {
@@ -30,6 +31,23 @@ public class PlayerJoinListener implements Listener {
             } catch (SQLException ex1) {
                 ex1.printStackTrace();
             }
+        }
+
+        try {
+            ps = MySQL.getConnection().prepareStatement("SELECT Total_score FROM Players WHERE UUID = ?");
+            ps.setString(1, e.getPlayer().getUniqueId().toString());
+            ResultSet rs = ps.executeQuery();
+            int score = 0;
+            if (rs.next() == true) {
+                score = rs.getInt("Total_score");
+            }
+            if(score == 0){
+                ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Total_score=0 WHERE UUID=?");
+                ps.setString(1, e.getPlayer().getUniqueId().toString());
+                ps.executeUpdate();
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
 
     }
