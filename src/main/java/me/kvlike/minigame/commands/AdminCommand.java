@@ -8,14 +8,11 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class AdminCommand implements CommandExecutor {
-
-    Plugin plugin = Minigame.getPlugin(Minigame.class);
 
     private void sendHelpCommand(Player p){
         p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&1--------------- &eMinigame Admin Help Menu &1---------------"));

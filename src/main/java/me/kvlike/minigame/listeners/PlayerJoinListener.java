@@ -1,8 +1,6 @@
 package me.kvlike.minigame.listeners;
 
-import me.kvlike.minigame.Minigame;
 import me.kvlike.minigame.database.MySQL;
-import me.kvlike.minigame.weapons.Cooldown;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -38,7 +36,7 @@ public class PlayerJoinListener implements Listener {
             ps.setString(1, e.getPlayer().getUniqueId().toString());
             ResultSet rs = ps.executeQuery();
             int score = 0;
-            if (rs.next() == true) {
+            if (rs.next()) {
                 score = rs.getInt("Total_score");
             }
             if(score == 0){

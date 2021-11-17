@@ -71,7 +71,7 @@ public class Arena {
                 for(Player player : players){
                     player.sendMessage(ChatColor.RED + p.getDisplayName() + ChatColor.YELLOW + " has joined the game " + ChatColor.GRAY + "(" + players.size() + "/" + maxPlayers + ")");
                 }
-                if(players.size() >= maxPlayers * plugin.getConfig().getInt("playersPercentToStart")) setGameState(GameState.STARTING);
+                if(players.size() >= maxPlayers * ArenasYaml.get().getDouble("playersPercentToStart")) setGameState(GameState.STARTING);
                 PreparedStatement ps;
                 try {
                     ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Last_game_score = 0 WHERE UUID = ?;");

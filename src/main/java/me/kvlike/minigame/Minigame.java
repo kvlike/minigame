@@ -41,6 +41,7 @@ public final class Minigame extends JavaPlugin {
         ArenasYaml.setup();
         ArenasYaml.get().addDefault("hub", null);
         ArenasYaml.get().addDefault("arenas", null);
+        ArenasYaml.get().addDefault("playersPercentToStart", 0.75);
         ArenasYaml.get().options().copyDefaults(true);
         ArenasYaml.save();
 
