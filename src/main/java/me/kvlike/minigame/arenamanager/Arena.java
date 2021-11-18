@@ -22,21 +22,21 @@ public class Arena {
     private GameState gameState = GameState.WAITING;
 
     private final List<Player> players = new ArrayList<>();
-    private final Map<Player,Boolean> isSpectator = new HashMap<>();
+    private final Map<Player, Boolean> isSpectator = new HashMap<>();
     private List<Location> spawnLocations = new ArrayList<>();
 
     private int time;
     private int taskID;
     private final Plugin plugin = Minigame.getPlugin(Minigame.class);
 
-    private void countdown(){
+    private void countdown() {
         time = 10;
         BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
         taskID = scheduler.scheduleSyncRepeatingTask(plugin, () -> {
-            for(Player p : players){
+            for (Player p : players) {
                 p.sendTitle(ChatColor.RED + Integer.toString(time), "", 0, 20, 0);
             }
-            if(time == 0) {
+            if (time == 0) {
                 Bukkit.getScheduler().cancelTask(taskID);
                 this.setGameState(GameState.PLAYING);
             }
@@ -51,16 +51,16 @@ public class Arena {
 
     public void join(Player p) {
         boolean ready = Minigame.hub != null;
-        if(spawnLocations.size() < maxPlayers) ready = false;
-        for(Location l : spawnLocations){
+        if (spawnLocations.size() < maxPlayers) ready = false;
+        for (Location l : spawnLocations) {
             if (l == null) {
                 ready = false;
                 break;
             }
         }
-        if(lobbyLocation == null) ready = false;
-        if(ready) {
-            if((gameState == GameState.WAITING || gameState == GameState.STARTING) && players.size() < maxPlayers) {
+        if (lobbyLocation == null) ready = false;
+        if (ready) {
+            if ((gameState == GameState.WAITING || gameState == GameState.STARTING) && players.size() < maxPlayers) {
                 players.add(p);
                 this.setSpectator(p, false);
                 Minigame.playerArenaMap.put(p, this.getName());
@@ -68,10 +68,11 @@ public class Arena {
                 p.getInventory().clear();
                 p.setHealth(20.0);
                 p.setGameMode(GameMode.ADVENTURE);
-                for(Player player : players){
+                for (Player player : players) {
                     player.sendMessage(ChatColor.RED + p.getDisplayName() + ChatColor.YELLOW + " has joined the game " + ChatColor.GRAY + "(" + players.size() + "/" + maxPlayers + ")");
                 }
-                if(players.size() >= maxPlayers * ArenasYaml.get().getDouble("playersPercentToStart")) setGameState(GameState.STARTING);
+                if (players.size() >= maxPlayers * ArenasYaml.get().getInt("playersPercentToStart") / 100)
+                    setGameState(GameState.STARTING);
                 PreparedStatement ps;
                 try {
                     ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Last_game_score = 0 WHERE UUID = ?;");
@@ -80,12 +81,10 @@ public class Arena {
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
-            }
-            else{
+            } else {
                 p.sendMessage(ChatColor.RED + "You can't join this arena now!");
             }
-        }
-        else {
+        } else {
             p.sendMessage(ChatColor.RED + "Can't join this arena! It is not fully set up yet!");
         }
     }
@@ -93,14 +92,21 @@ public class Arena {
     public void leave(Player p, Boolean message) {
         p.setHealth(20.0);
         p.setGameMode(GameMode.SURVIVAL);
-        if(message) for(Player player : players){
-            player.sendMessage(ChatColor.RED + p.getDisplayName() + ChatColor.YELLOW + " left the game");
+        if (message) for (Player player : players) {
+            if (!this.checkSpectator(p))
+                player.sendMessage(ChatColor.RED + p.getDisplayName() + ChatColor.YELLOW + " left the game");
         }
-        if(gameState == GameState.PLAYING){
-            if(this.getAlivePlayers() == 2){
+        players.remove(p);
+        this.setSpectator(p, false);
+        isSpectator.remove(p);
+        Minigame.playerArenaMap.remove(p);
+        p.getInventory().clear();
+        p.teleport(Minigame.hub);
+        if (gameState == GameState.PLAYING) {
+            if (this.getAlivePlayers() == 1) {
                 Player w = null;
-                for(Player x : players){
-                    if(!this.checkSpectator(x) && x != p) {
+                for (Player x : players) {
+                    if (!this.checkSpectator(x) && x != p) {
                         w = x;
                         break;
                     }
@@ -108,21 +114,15 @@ public class Arena {
                 win(w);
             }
         }
-        players.remove(p);
-        this.setSpectator(p, false);
-        isSpectator.remove(p);
-        if(players.size() < maxPlayers - 4 && gameState == GameState.STARTING){
+        if (players.size() < maxPlayers * ArenasYaml.get().getInt("playersPercentToStart") / 100 && gameState == GameState.STARTING) {
             gameState = GameState.WAITING;
             Bukkit.getScheduler().cancelTask(taskID);
         }
-        Minigame.playerArenaMap.remove(p);
-        p.getInventory().clear();
-        p.teleport(Minigame.hub);
     }
 
-    public void win(Player p){
+    public void win(Player p) {
         p.sendTitle(ChatColor.GREEN + "You won!", "", 5, 40, 5);
-        for(Player player : players){
+        for (Player player : players) {
             player.sendMessage(ChatColor.RED + p.getDisplayName() + ChatColor.GREEN + " won the game!");
         }
         PreparedStatement ps;
@@ -158,7 +158,7 @@ public class Arena {
         return lobbyLocation;
     }
 
-    public int getMaxPlayers(){
+    public int getMaxPlayers() {
         return maxPlayers;
     }
 
@@ -166,37 +166,37 @@ public class Arena {
         return gameState;
     }
 
-    public boolean checkSpectator(Player player){
+    public boolean checkSpectator(Player player) {
         return isSpectator.get(player);
     }
 
-    public int getAlivePlayers(){
+    public int getAlivePlayers() {
         int spectators = 0;
-        for(Player p : players){
-            if(this.checkSpectator(p)) spectators++;
+        for (Player p : players) {
+            if (this.checkSpectator(p)) spectators++;
         }
         return players.size() - spectators;
     }
 
-    public void setSpectator(Player player, Boolean bool){
+    public void setSpectator(Player player, Boolean bool) {
         isSpectator.put(player, bool);
-        if(bool){
-            for(Player p : players) player.hidePlayer(plugin, p);
+        if (bool) {
+            for (Player p : players) p.hidePlayer(plugin, player);
             player.setHealth(20.0);
             player.setAllowFlight(true);
             player.setFlying(true);
             player.getInventory().clear();
-            if(this.getAlivePlayers() == 1){
-                for(Player p : players){
-                    if(!this.checkSpectator(p)){
+            if (this.getAlivePlayers() == 1) {
+                for (Player p : players) {
+                    if (!this.checkSpectator(p)) {
                         this.win(p);
                         break;
                     }
                 }
             }
         }
-        if(!bool){
-            for(Player p : players) player.showPlayer(plugin, p);
+        if (!bool) {
+            for (Player p : Bukkit.getOnlinePlayers()) p.showPlayer(plugin, player);
             player.setFlying(false);
             player.setAllowFlight(false);
         }
@@ -221,28 +221,28 @@ public class Arena {
     }
 
     public void setGameState(GameState gameState) {
-        if(this.gameState == gameState) return;
-        if(this.gameState == GameState.PLAYING && gameState == GameState.STARTING) return;
-        if(this.gameState == GameState.WAITING && gameState == GameState.PLAYING) return;
-        if(this.gameState == GameState.STARTING && gameState == GameState.WAITING) return;
-        if(gameState == GameState.STARTING && players.size() > 1) return;
+        if (this.gameState == gameState) return;
+        if (this.gameState == GameState.PLAYING && gameState == GameState.STARTING) return;
+        if (this.gameState == GameState.WAITING && gameState == GameState.PLAYING) return;
+        if (this.gameState == GameState.STARTING && gameState == GameState.WAITING) return;
+        if (gameState == GameState.STARTING && players.size() < 2) return;
 
         this.gameState = gameState;
 
-        if(gameState == GameState.WAITING){
-            while(0 < players.size()){
+        if (gameState == GameState.WAITING) {
+            while (0 < players.size()) {
                 this.leave(players.get(0), false);
             }
         }
-        if(gameState == GameState.STARTING){
+        if (gameState == GameState.STARTING) {
             countdown();
         }
-        if(gameState == GameState.PLAYING){
-            for(int i = 0; i < players.size(); i++){
+        if (gameState == GameState.PLAYING) {
+            for (int i = 0; i < players.size(); i++) {
                 players.get(i).teleport(spawnLocations.get(i));
                 players.get(i).getInventory().clear();
                 Set<String> weapons = WeaponsYaml.get().getConfigurationSection("weapons").getKeys(false);
-                for(String weapon : weapons){
+                for (String weapon : weapons) {
                     ItemStack item = new ItemStack(Material.getMaterial(WeaponsYaml.get().getString("weapons." + weapon + ".material")));
                     ItemMeta meta = item.getItemMeta();
                     meta.setDisplayName(WeaponsYaml.get().getString("weapons." + weapon + ".name"));

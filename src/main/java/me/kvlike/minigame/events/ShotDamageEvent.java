@@ -15,7 +15,7 @@ public class ShotDamageEvent extends Event implements Cancellable {
     private static final HandlerList HANDLERS_LIST = new HandlerList();
     private boolean isCancelled;
 
-    public ShotDamageEvent(Player attacker, Player victim, double damage, String weapon){
+    public ShotDamageEvent(Player attacker, Player victim, double damage, String weapon) {
         this.attacker = attacker;
         this.victim = victim;
         this.damage = damage;

@@ -8,8 +8,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 public class PlayerQuitListener implements Listener {
 
     @EventHandler
-    public void onQuit(PlayerQuitEvent e){
-        if(Minigame.playerArenaMap.containsKey(e.getPlayer())) {
+    public void onQuit(PlayerQuitEvent e) {
+        if (Minigame.playerArenaMap.containsKey(e.getPlayer())) {
             Minigame.arenaManager.getArena(Minigame.playerArenaMap.get(e.getPlayer())).leave(e.getPlayer(), true);
         }
     }

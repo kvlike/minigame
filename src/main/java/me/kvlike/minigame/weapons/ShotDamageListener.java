@@ -15,21 +15,21 @@ import java.sql.SQLException;
 public class ShotDamageListener implements Listener {
 
     @EventHandler
-    public void onShotDamage(ShotDamageEvent e){
+    public void onShotDamage(ShotDamageEvent e) {
 
         String weaponName = WeaponsYaml.get().getString(e.getWeapon() + ".name");
         int weaponScore = WeaponsYaml.get().getInt(e.getWeapon() + ".scoreForKill");
 
         e.getAttacker().playSound(e.getAttacker().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-        if(e.getVictim().getHealth() <= e.getDamage()){
+        if (e.getVictim().getHealth() <= e.getDamage()) {
             e.getVictim().getWorld().strikeLightningEffect(e.getVictim().getLocation());
-            for(Player p : Minigame.arenaManager.getArena(Minigame.playerArenaMap.get(e.getVictim())).getPlayers()){
+            for (Player p : Minigame.arenaManager.getArena(Minigame.playerArenaMap.get(e.getVictim())).getPlayers()) {
                 p.sendMessage(ChatColor.RED + e.getVictim().getDisplayName() + ChatColor.YELLOW + " was shot by " + ChatColor.RED + e.getAttacker().getDisplayName() + ChatColor.YELLOW + " using " + weaponName);
             }
             Minigame.arenaManager.getArena(Minigame.playerArenaMap.get(e.getVictim())).setSpectator(e.getVictim(), true);
-            if(e.getAttacker().getHealth() + WeaponsYaml.get().getInt("healthGainOnKill") < 20) e.getAttacker().setHealth(e.getAttacker().getHealth() + WeaponsYaml.get().getInt("healthGainOnKill"));
+            if (e.getAttacker().getHealth() + WeaponsYaml.get().getInt("healthGainOnKill") < 20)
+                e.getAttacker().setHealth(e.getAttacker().getHealth() + WeaponsYaml.get().getInt("healthGainOnKill"));
             else e.getAttacker().setHealth(20.0);
-            e.getAttacker().setFoodLevel(20);
             PreparedStatement ps;
             try {
                 ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Total_score = Total_score + ? WHERE UUID = ?;");
@@ -44,8 +44,7 @@ public class ShotDamageListener implements Listener {
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-        }
-        else{
+        } else {
             e.getVictim().damage(e.getDamage());
         }
 

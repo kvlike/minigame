@@ -31,7 +31,7 @@ public class MySQL {
                 console.sendMessage("[Minigame] Connected to MySQL database successfully!");
             } catch (SQLException e) {
                 console.sendMessage("[Minigame] " + ChatColor.RED + "Can't connect to database properly! Please check your config.yml file!");
-                Bukkit.getPluginManager().disablePlugin(Minigame.getPlugin(Minigame.class));
+                Bukkit.getPluginManager().disablePlugin(plugin);
             }
         }
     }
@@ -50,7 +50,7 @@ public class MySQL {
 
     // isConnected
     public static boolean isConnected() {
-        return (con == null ? false : true);
+        return (con != null);
     }
 
     // getConnection

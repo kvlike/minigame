@@ -5,6 +5,8 @@ import me.kvlike.minigame.arenamanager.ArenasYaml;
 import me.kvlike.minigame.commands.AdminCommand;
 import me.kvlike.minigame.commands.PlayerCommand;
 import me.kvlike.minigame.database.MySQL;
+import me.kvlike.minigame.listeners.DamageListener;
+import me.kvlike.minigame.listeners.FoodLevelChangeListener;
 import me.kvlike.minigame.listeners.PlayerJoinListener;
 import me.kvlike.minigame.listeners.PlayerQuitListener;
 import me.kvlike.minigame.weapons.ShootingListener;
@@ -40,8 +42,8 @@ public final class Minigame extends JavaPlugin {
         // arenas yaml
         ArenasYaml.setup();
         ArenasYaml.get().addDefault("hub", null);
-        ArenasYaml.get().addDefault("arenas", null);
         ArenasYaml.get().addDefault("playersPercentToStart", 0.75);
+        ArenasYaml.get().addDefault("arenas", null);
         ArenasYaml.get().options().copyDefaults(true);
         ArenasYaml.save();
 
@@ -93,7 +95,7 @@ public final class Minigame extends JavaPlugin {
 
         hub = (Location) ArenasYaml.get().get("hub");
 
-        if(ArenasYaml.get().getConfigurationSection("arenas") != null) {
+        if (ArenasYaml.get().getConfigurationSection("arenas") != null) {
 
             Set<String> keys = ArenasYaml.get().getConfigurationSection("arenas").getKeys(false);
 
@@ -109,6 +111,8 @@ public final class Minigame extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
+        Bukkit.getPluginManager().registerEvents(new FoodLevelChangeListener(), this);
+        Bukkit.getPluginManager().registerEvents(new DamageListener(), this);
         Bukkit.getPluginManager().registerEvents(new ShootingListener(), this);
         Bukkit.getPluginManager().registerEvents(new ShotDamageListener(), this);
 
@@ -117,7 +121,7 @@ public final class Minigame extends JavaPlugin {
     @Override
     public void onDisable() {
 
-        if(MySQL.isConnected())
+        if (MySQL.isConnected())
             MySQL.disconnect(); // disconnect from MySQL database
 
     }

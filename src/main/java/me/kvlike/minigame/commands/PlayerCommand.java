@@ -14,7 +14,7 @@ import java.sql.SQLException;
 
 public class PlayerCommand implements CommandExecutor {
 
-    private void sendHelpCommand(Player p){
+    private void sendHelpCommand(Player p) {
         p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&1--------------- &eMinigame Help Menu &1---------------"));
         p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&1- &e/minigame join <arena name> &1- join arena by name"));
         p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&1- &e/minigame leave &1- leave the game"));
@@ -25,12 +25,11 @@ public class PlayerCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if(sender instanceof Player) {
+        if (sender instanceof Player) {
             Player player = (Player) sender;
             if (args.length == 0) {
                 sendHelpCommand(player);
-            }
-            else if(args[0].equalsIgnoreCase("score")){
+            } else if (args[0].equalsIgnoreCase("score")) {
                 PreparedStatement ps;
                 try {
                     ps = MySQL.getConnection().prepareStatement("SELECT Total_score FROM Players WHERE UUID = ?");
@@ -55,36 +54,30 @@ public class PlayerCommand implements CommandExecutor {
                     player.sendMessage(ChatColor.RED + "Database error!");
                     e.printStackTrace();
                 }
-            }
-            else if(args[0].equalsIgnoreCase("join")){
-                if(args.length > 1){
-                    if(Minigame.arenaManager.exists(args[1])) {
-                        if(Minigame.playerArenaMap.get(player) == Minigame.arenaManager.getArena(args[1]).getName()){
+            } else if (args[0].equalsIgnoreCase("join")) {
+                if (args.length > 1) {
+                    if (Minigame.arenaManager.exists(args[1])) {
+                        if (Minigame.playerArenaMap.get(player) == Minigame.arenaManager.getArena(args[1]).getName()) {
                             player.sendMessage(ChatColor.RED + "You already are in this arena!");
                             return true;
                         }
-                        if(Minigame.playerArenaMap.containsKey(player))
+                        if (Minigame.playerArenaMap.containsKey(player))
                             Minigame.arenaManager.getArena(Minigame.playerArenaMap.get(player)).leave(player, true);
                         Minigame.arenaManager.getArena(args[1]).join(player);
                     } else player.sendMessage(ChatColor.RED + "There is no such arena!");
-                }
-                else {
+                } else {
                     player.sendMessage(ChatColor.RED + "Usage: " + ChatColor.YELLOW + "/minigame join <arena name>");
                 }
-            }
-            else if(args[0].equalsIgnoreCase("leave")){
-                if(Minigame.playerArenaMap.containsKey(player)) {
+            } else if (args[0].equalsIgnoreCase("leave")) {
+                if (Minigame.playerArenaMap.containsKey(player)) {
                     Minigame.arenaManager.getArena(Minigame.playerArenaMap.get(player)).leave(player, true);
-                }
-                else{
+                } else {
                     player.sendMessage(ChatColor.RED + "You are not in game!");
                 }
-            }
-            else{
+            } else {
                 sendHelpCommand(player);
             }
-        }
-        else{
+        } else {
             sender.sendMessage(ChatColor.RED + "Only players can use that command!");
         }
 

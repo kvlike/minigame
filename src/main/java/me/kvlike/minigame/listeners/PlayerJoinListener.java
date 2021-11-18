@@ -12,7 +12,7 @@ import java.sql.SQLException;
 public class PlayerJoinListener implements Listener {
 
     @EventHandler
-    public void onJoin(PlayerJoinEvent e){
+    public void onJoin(PlayerJoinEvent e) {
 
         PreparedStatement ps;
         try {
@@ -39,7 +39,7 @@ public class PlayerJoinListener implements Listener {
             if (rs.next()) {
                 score = rs.getInt("Total_score");
             }
-            if(score == 0){
+            if (score == 0) {
                 ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Total_score=0 WHERE UUID=?");
                 ps.setString(1, e.getPlayer().getUniqueId().toString());
                 ps.executeUpdate();
