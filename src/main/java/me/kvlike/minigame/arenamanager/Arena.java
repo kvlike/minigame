@@ -203,7 +203,16 @@ public class Arena {
     }
 
     public void setSpawnLocation(Location spawnLocation, int index) {
-        spawnLocations.add(index, spawnLocation);
+        if (spawnLocations != null) {
+            if (index >= spawnLocations.size()) {
+                spawnLocations.add(index, spawnLocation);
+            } else {
+                spawnLocations.set(index, spawnLocation);
+            }
+        } else {
+            spawnLocations = new ArrayList<>();
+            spawnLocations.add(index, spawnLocation);
+        }
         ArenasYaml.get().set("arenas." + name + ".spawnLocations", spawnLocations);
         ArenasYaml.save();
     }

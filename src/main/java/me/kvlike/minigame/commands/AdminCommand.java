@@ -39,32 +39,40 @@ public class AdminCommand implements CommandExecutor {
                 sendHelpCommand(player);
             } else if (args[0].equalsIgnoreCase("setscore")) {
                 if (args.length > 2) {
-                    PreparedStatement ps;
                     try {
-                        ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Total_score = ? WHERE Name = ?;");
-                        ps.setInt(1, Integer.parseInt(args[2]));
-                        ps.setString(2, args[1]);
-                        ps.executeUpdate();
-                        player.sendMessage(ChatColor.GREEN + "Set " + ChatColor.RED + args[1] + ChatColor.GREEN + "'s score to " + ChatColor.AQUA + args[2]);
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                        player.sendMessage(ChatColor.RED + "Database error!");
+                        PreparedStatement ps;
+                        try {
+                            ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Total_score = ? WHERE Name = ?;");
+                            ps.setInt(1, Integer.parseInt(args[2]));
+                            ps.setString(2, args[1]);
+                            ps.executeUpdate();
+                            player.sendMessage(ChatColor.GREEN + "Set " + ChatColor.RED + args[1] + ChatColor.GREEN + "'s score to " + ChatColor.AQUA + args[2]);
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                            player.sendMessage(ChatColor.RED + "Database error!");
+                        }
+                    } catch (NumberFormatException e) {
+                        player.sendMessage(ChatColor.RED + "Usage: " + ChatColor.YELLOW + "/mga setscore <player> <amount>");
                     }
                 } else {
                     player.sendMessage(ChatColor.RED + "Usage: " + ChatColor.YELLOW + "/mga setscore <player> <amount>");
                 }
             } else if (args[0].equalsIgnoreCase("addscore")) {
                 if (args.length > 2) {
-                    PreparedStatement ps;
                     try {
-                        ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Total_score = Total_score + ? WHERE Name = ?;");
-                        ps.setInt(1, Integer.parseInt(args[2]));
-                        ps.setString(2, args[1]);
-                        ps.executeUpdate();
-                        player.sendMessage(ChatColor.GREEN + "Added " + ChatColor.AQUA + args[2] + ChatColor.GREEN + " to " + ChatColor.RED + args[1] + ChatColor.GREEN + "'s score");
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                        player.sendMessage(ChatColor.RED + "Database error!");
+                        PreparedStatement ps;
+                        try {
+                            ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Total_score = Total_score + ? WHERE Name = ?;");
+                            ps.setInt(1, Integer.parseInt(args[2]));
+                            ps.setString(2, args[1]);
+                            ps.executeUpdate();
+                            player.sendMessage(ChatColor.GREEN + "Added " + ChatColor.AQUA + args[2] + ChatColor.GREEN + " to " + ChatColor.RED + args[1] + ChatColor.GREEN + "'s score");
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                            player.sendMessage(ChatColor.RED + "Database error!");
+                        }
+                    } catch (NumberFormatException e) {
+                        player.sendMessage(ChatColor.RED + "Usage: " + ChatColor.YELLOW + "/mga addscore <player> <amount>");
                     }
                 } else {
                     player.sendMessage(ChatColor.RED + "Usage: " + ChatColor.YELLOW + "/mga addscore <player> <amount>");
@@ -101,8 +109,12 @@ public class AdminCommand implements CommandExecutor {
                 if (args.length > 2) {
                     if (Minigame.arenaManager.exists(args[1])) {
                         if (Minigame.arenaManager.getArena(args[1]).getMaxPlayers() >= Integer.parseInt(args[2]) && Integer.parseInt(args[2]) > 0) {
-                            Minigame.arenaManager.getArena(args[1]).setSpawnLocation(player.getLocation(), Integer.parseInt(args[2]) - 1);
-                            player.sendMessage(ChatColor.GREEN + "Spawn " + args[2] + " for arena " + ChatColor.RED + args[1] + ChatColor.GREEN + " set successfully!");
+                            try {
+                                Minigame.arenaManager.getArena(args[1]).setSpawnLocation(player.getLocation(), Integer.parseInt(args[2]) - 1);
+                                player.sendMessage(ChatColor.GREEN + "Spawn " + args[2] + " for arena " + ChatColor.RED + args[1] + ChatColor.GREEN + " set successfully!");
+                            } catch (IndexOutOfBoundsException e) {
+                                player.sendMessage(ChatColor.RED + "Please set your spawns in correct order (ex. set spawn 1 before setting spawn 2). You can change them later.");
+                            }
                         } else {
                             player.sendMessage(ChatColor.RED + "This arena can only fit " + Minigame.arenaManager.getArena(args[1]).getMaxPlayers() + " players!");
                         }
