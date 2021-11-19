@@ -73,14 +73,6 @@ public class Arena {
                 }
                 if (players.size() >= maxPlayers * ArenasYaml.get().getInt("playersPercentToStart") / 100)
                     setGameState(GameState.STARTING);
-                PreparedStatement ps;
-                try {
-                    ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Last_game_score = 0 WHERE UUID = ?;");
-                    ps.setString(1, p.getUniqueId().toString());
-                    ps.executeUpdate();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
             } else {
                 p.sendMessage(ChatColor.RED + "You can't join this arena now!");
             }
@@ -257,6 +249,14 @@ public class Arena {
                     meta.setDisplayName(WeaponsYaml.get().getString("weapons." + weapon + ".name"));
                     item.setItemMeta(meta);
                     players.get(i).getInventory().addItem(item);
+                }
+                PreparedStatement ps;
+                try {
+                    ps = MySQL.getConnection().prepareStatement("UPDATE Players SET Last_game_score = 0 WHERE UUID = ?;");
+                    ps.setString(1, players.get(i).getUniqueId().toString());
+                    ps.executeUpdate();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
                 }
                 players.get(i).sendTitle(ChatColor.GREEN + "Game started!", "", 0, 20, 5);
             }
